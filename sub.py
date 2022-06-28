@@ -16,18 +16,21 @@ def extract_unique_str(list, index):
 def get_sub_graph_name(flow_name):
     return '{0}_{1}'.format('cluster',flow_name)
 
-def get_new_name(level, name):
-    return '{0}_{1}'.format(level,name)
 
-def rec(level, parent_graph, list_n, longest_len):
+# def get_new_name(level, name):
+#     return '{0}_{1}'.format(level,name)
+
+
+def rec(level, parent_graph, list_n, longest_len, flow_name):
     if level < longest_len:
         print('Start of level ------- ', level)
         # unique topic of level n
-        sub_1 = extract_unique_str(list_n, level)
-        # sub_1 = ['b']
+        sub = extract_unique_str(list_n, level)
 
-        for t in sub_1:
+        for t in sub:
             print('t is ', t)
+            flow_name.append(t)
+            print(flow_name)
             # list that contains topic t
             list_of_t = []
             # longest len of topic in all topics in list_of_t
@@ -38,34 +41,47 @@ def rec(level, parent_graph, list_n, longest_len):
                     list_of_t.append(s)
                     if len(s) > longest_len:
                         longest_len = len(s)
-            print(list_of_t)
-
+            # print(list_of_t)
             tmp_graph = Digraph()
             if len(list_of_t) > 1:
-                sub_graph_name = get_sub_graph_name(t)
-                print(sub_graph_name)
+                cluster_name = '/'.join(flow_name)
+                print(cluster_name)
+                sub_graph_name = get_sub_graph_name(cluster_name)
+                # print(sub_graph_name)
                 sub_graph = Digraph(sub_graph_name, node_attr={'shape': 'rectangle'})
-                sub_graph.attr(label = t)
+                sub_graph.attr(label = cluster_name)
                 for topic in list_of_t:
                     topic_name = '/'.join(topic)
-                    sub_graph.node(get_new_name(level,topic_name), label=topic_name)
+                    sub_graph.node(topic_name, label=topic_name)
                 parent_graph.subgraph(sub_graph)
                 # parent_graph = sub_graph
                 tmp_graph = sub_graph
-                print(sub_graph.source)
+                # print(sub_graph.source)
 
             print('End of current level ----- ', level)
-            rec(level+1, tmp_graph, list_of_t, longest_len)
+            rec(level+1, tmp_graph, list_of_t, longest_len, flow_name)
+            parent_graph.subgraph(tmp_graph)
+            print("NOW BACK TO Previous level: ", level)
+            if level == 1:
+                flow_name.pop()
+
+        # print(flow_name)
+        for i in range(level-2):
+            flow_name.pop()
+        print("HEREEEE: ", flow_name)
+
     else:
         print("NO MORE")
+        # print(level)
+        flow_name.pop()
+        print(flow_name)
         return
 
-
 def main():
-    topics = ['/a/x/1', '/a/x/2', '/a/y/1', '/a/y/2', '/a/z', '/b/x/1', '/b/x/2', '/c']
+    topics = ['/a/x/1', '/a/x/2', '/a/y/1', '/a/y/2', '/a/z', '/b/x/1', '/b/x/2','/c']
 
-    # for topic in topics:
-    #     parent_graph.node(topic, label=topic)
+    for topic in topics:
+        parent_graph.node(topic, label=topic)
 
     # list_of_str = []
     longest_len = 0
@@ -76,8 +92,9 @@ def main():
             longest_len = len(tmp)
 
     level = 1
-    rec(level, parent_graph, list_of_str, longest_len)
 
+    rec(level, parent_graph, list_of_str, longest_len, flow_name=[''])
+    # parent_graph.subgraph(tmp_graph)
     # for topic in topics:
         # if topic not in parent_graph.node_attr
     parent_graph.unflatten(stagger=3, fanout=True).view()
