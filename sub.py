@@ -58,27 +58,38 @@ def rec(level, parent_graph, list_n, longest_len, flow_name):
                 tmp_graph = sub_graph
                 # print(sub_graph.source)
 
-            print('End of current level ----- ', level)
             rec(level+1, tmp_graph, list_of_t, longest_len, flow_name)
+            # print('End of current level ----- ', level)
             parent_graph.subgraph(tmp_graph)
-            print("NOW BACK TO Previous level: ", level)
-            if level == 1:
-                flow_name.pop()
+
+        # if level == 1:
+        #     print("POP HERE 3")
+        #     flow_name.pop()
 
         # print(flow_name)
-        for i in range(level-2):
-            flow_name.pop()
+        print('End of current level ----- ', level)
+        print("NOW BACK TO Previous level: ", level-1)
+
+        # for i in range(level-2):
+        #     flow_name.pop()
+        # flow_name = flow_name[0:2]
+        print("POP HERE 1")
+        flow_name.pop()
+        # print("TEST, ", flow_name[0:2])
         print("HEREEEE: ", flow_name)
 
     else:
         print("NO MORE")
-        # print(level)
+        print("POP HERE 2")
         flow_name.pop()
-        print(flow_name)
+        # print(flow_name)
         return
 
 def main():
-    topics = ['/a/x/1', '/a/x/2', '/a/y/1', '/a/y/2', '/a/z', '/b/x/1', '/b/x/2','/c']
+    # topics = ['/a/x/1', '/a/x/2', '/a/y/1', '/a/y/2', '/a/z', '/b/x/1', '/b/x/2','/c']
+    topics = ['/a/x/1/m', '/a/x/1/n', '/a/x/2', '/a/y/1', '/a/y/2', '/a/z', '/b/x/1', '/b/x/2',
+              '/c', '/a/x/m/2', '/b/y/1', '/b/c', '/a/a', '/d/c/c/c/c/c/c/c', '/b/ccccccccccccccccccc']
+
 
     for topic in topics:
         parent_graph.node(topic, label=topic)
