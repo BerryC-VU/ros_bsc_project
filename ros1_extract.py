@@ -1,4 +1,4 @@
-# python3 extract_graph.py bagfile
+# python3 ros1_extract.py path/bagfile
 
 from bagpy import bagreader
 import pandas as pd
@@ -6,6 +6,7 @@ import sys
 import ast
 from graphviz import Digraph
 from rosbag import ROSBagException
+import group_topic
 
 
 def read_rosout(b, bagname):
@@ -17,24 +18,17 @@ def read_rosout(b, bagname):
     all_info = rosout[['name', 'msg', 'topics']]
     return all_info
 
+
 def generate_topics(graph, all_topics):
-    sub_topics = []
     for topic in all_topics:
-        sub_topics += topic.split('/')[1:]
         if topic not in graph:
             graph.node(topic, topic, {'shape': 'rectangle'})
 
-    for sub_topic in sub_topics:
-        if sub_topics.count(sub_topic) > 1:
-            substring = '/' + sub_topic
-            # create clusters
-            with graph.subgraph(name='cluster_'+ sub_topic) as sub_topic:
-                for topic in all_topics:
-                    if substring in topic:
-                        sub_topic.node(topic, topic, {'shape' : 'rectangle'})
-                sub_topic.attr (label=substring)
+    group_topic.main(graph, all_topics)
 
-def generate_edges(graph, all_info, nodes):
+
+def generate_edges(graph, all_info):
+    nodes = all_info['name'].unique()
     # merge subscribers for each node
     edge_info = pd.DataFrame(data={'name': nodes}, columns=['name', 'topics'])
     for i in range(len(nodes)):
@@ -65,43 +59,34 @@ def generate_edges(graph, all_info, nodes):
             graph.edge(publisher, subscriber)
 
 
-def extract_graph(bagname, topics, all_info):
-    graph = Digraph(name=bagname, strict=True)
+def generate_nodes(graph, all_info):
+    nodes = all_info['name'].unique()
+    for node in nodes:
+        graph.node(node, node, {'shape': 'oval'})
+
+
+def create_graph(topics, all_info, graph):
 
     generate_topics(graph, topics)
 
-    # if no '/rosout' topic in the bag file
+    # if no message in '/rosout'
     if len(all_info) == 0:
-        # print("FALSE")
-        # nodes
-        graph.node("/rosbag_record", "/rosbag_record", {'shape': 'oval'})
-        graph.node("/rosout", "/rosout", {'shape': 'rectangle'})
-
-        # edges
-        graph.edge("/rosbag_record", "/rosout")
-        for topic in topics:
-            graph.edge(topic, "/rosbag_record")
+        print("NO message in '/rosout'")
+        sys.exit()
     else:
-        # print("TRUE")
         # nodes
-        nodes = all_info['name'].unique()
-        for node in nodes:
-            graph.node(node, node, {'shape': 'oval'})
-
+        generate_nodes(graph, all_info)
         # edges
-        generate_edges(graph, all_info, nodes)
+        generate_edges(graph, all_info)
 
     # add fixed node and edges
     graph.node("/fixed node", "/rosout", {'shape': 'oval'})
     graph.edge("/rosout", "/fixed node")
     graph.edge("/fixed node", "/rosout_agg")
 
-    # view graph
-    graph.unflatten(stagger=3, fanout=True).view()
 
-
-def main():
-    bagfile = sys.argv[1]
+def main(bagfile):
+    # bagfile = sys.argv[1]
     bagname = bagfile.replace('.bag', '')
 
     while(True):
@@ -113,15 +98,17 @@ def main():
             sys.exit()
 
     if '/rosout' in b.topics:
-        # print("TRUE")
+        print("TRUE")
         all_info = read_rosout(b, bagname)
     else:
-        # print("FALSE")
-        # print(b.topics)
+        print("THERE is no '/rosout' topic")
         sys.exit()
 
-    extract_graph(bagname, b.topics, all_info)
+    graph = Digraph(name=bagname, strict=True)
+    create_graph(b.topics, all_info,graph)
 
+    # view graph
+    graph.unflatten(stagger=3, fanout=True).view()
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main(sys.argv[2])

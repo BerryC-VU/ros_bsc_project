@@ -1,6 +1,6 @@
 from graphviz import Digraph
 
-graph = Digraph(strict=True)  # root graph
+# graph = Digraph(strict=True)  # root graph
 list_of_str = []
 
 
@@ -65,10 +65,10 @@ def group_topics(parent_graph, level, old_list_t, longest_len, name):
         return
 
 
-def main():
+def main(graph, topics):
     # topics = ['/a/x/1', '/a/x/2', '/a/y/1', '/a/y/2', '/a/z', '/b/x/1', '/b/x/2','/c']
-    topics = ['/a/x/1/m', '/a/x/1/n', '/a/x/2', '/a/y/1', '/a/y/2', '/a/z', '/b/x/1', '/b/x/2',
-              '/c', '/a/x/m/2', '/b/y/1', '/b/c', '/a/a', '/d/c/c/c/c/c/c/c', '/b/ccccccccccccccccccc']
+    # topics = ['/a/x/1/m', '/a/x/1/n', '/a/x/2', '/a/y/1', '/a/y/2', '/a/z', '/b/x/1', '/b/x/2',
+    #           '/c', '/a/x/m/2', '/b/y/1', '/b/c', '/a/a', '/d/c/c/c/c/c/c/c', '/b/ccccccccccccccccccc']
 
     # add each topic into the graph, label with its own name
     for topic in topics:
@@ -91,8 +91,8 @@ def main():
     group_topics(graph, 1, list_of_str, longest_len, [''])
 
     # view graph
-    graph.unflatten(stagger=3, fanout=True).view()
+    # graph.unflatten(stagger=3, fanout=True).view()
 
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
