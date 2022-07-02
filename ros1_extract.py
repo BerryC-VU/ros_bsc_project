@@ -66,18 +66,9 @@ def generate_nodes(graph, all_info):
 
 
 def create_graph(topics, all_info, graph):
-
     generate_topics(graph, topics)
-
-    # if no message in '/rosout'
-    if len(all_info) == 0:
-        print("NO message in '/rosout'")
-        sys.exit()
-    else:
-        # nodes
-        generate_nodes(graph, all_info)
-        # edges
-        generate_edges(graph, all_info)
+    generate_nodes(graph, all_info)
+    generate_edges(graph, all_info)
 
     # add fixed node and edges
     graph.node("/fixed node", "/rosout", {'shape': 'oval'})
@@ -100,15 +91,19 @@ def main(bagfile):
     if '/rosout' in b.topics:
         print("TRUE")
         all_info = read_rosout(b, bagname)
+        if len(all_info) == 0:
+            print("NO message in '/rosout'")
+            sys.exit()
     else:
         print("THERE is no '/rosout' topic")
         sys.exit()
 
-    graph = Digraph(name=bagname, strict=True)
+    graph = Digraph(name='ros1_'+bagname, strict=True)
     create_graph(b.topics, all_info,graph)
 
     # view graph
     graph.unflatten(stagger=3, fanout=True).view()
+    # graph.save(filename=)
 
 # if __name__ == "__main__":
 #     main(sys.argv[2])

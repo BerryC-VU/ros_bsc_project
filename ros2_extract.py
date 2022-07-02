@@ -19,6 +19,8 @@ def read_rosout(bagfolder, reader, conns):
         stamps.append(msg.stamp.sec)
         nodes.append(msg.name)
         msgs.append(msg.msg)
+        if "Subscribing to" in msg.msg:
+            print("TRUE")
     if len(msgs) == 0:
         print("NO message in '/rosout'")
     else:
@@ -42,16 +44,38 @@ def generate_nodes(graph, all_info):
         graph.node(node, node, {'shape': 'oval'})
 
 
+def generate_edges(graph, all_topics):
+    for topic in all_topics:
+        if topic == '/parameter_events':
+            graph.edge('/parameter_events', '/_ros2cli_rosbag2')
+
+        graph.edge('/_ros2cli_rosbag2', topic)
+
+
 def create_graph(graph, topics, all_info):
     generate_topics(graph, topics)
     generate_nodes(graph, all_info)
 
+    # add fixed nodes
+    graph.node('/_ros2cli_rosbag2', '/_ros2cli_rosbag2')
+
+    generate_edges(graph, topics)
 
 def main(bagfolder):
-    # 这个地方用的是folder name,读取的是folder里面的metadata.yaml文件
     with Reader(bagfolder) as reader:
         topics = list(reader.topics)
-        print(list(topics))
+        # print(list(topics))
+        # print(type(topics))
+        # # print(dir(topics))
+        #
+        # for key in topics:
+        #     print(key, '->', topics[key].connections)
+
+        # for topic in topics:
+        #     print(topic)
+        # for topic in topics:
+        #     print("Topic is: ", topic)
+        #     print(topic.msgtype)
 
         # check whether '/rosout' exist since it is the only node that log information
         connections = [x for x in reader.connections if x.topic == '/rosout']
@@ -63,7 +87,7 @@ def main(bagfolder):
             print("THERE is no '/rosout' topic")
             sys.exit()
 
-        graph = Digraph()
+        graph = Digraph(name='ros2_'+bagfolder, strict=True)
         create_graph(graph, topics, all_info)
 
         # view graph
