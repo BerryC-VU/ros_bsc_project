@@ -7,7 +7,7 @@ import sys
 
 def main():
     ros_ver = sys.argv[1]
-    # path_to_file = 'rosbag2_2022_05_25-1/rosbag2_2022_05_25-15_53_16' #/2022-07-01-06-30-52.bag'
+    # path_to_file = 'ros2/TUdelft/rosbag2_2022_07_01-09_27_07'
     if ros_ver == 'ros1':
         path_to_file = sys.argv[2]
         ros1_extract.main(path_to_file)

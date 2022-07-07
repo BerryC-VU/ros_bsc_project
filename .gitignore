@@ -1,13 +1,2 @@
-/Digraph.gv
-/Digraph.gv.pdf
-/back_and_forth_small/
-/detecting_object/
-/turtlesim1/
-/turtlesim_test/
-/back_and_forth_small.bag
-/back_and_forth_small.gv
-/back_and_forth_small.gv.pdf
-/detecting_object.bag
-/no-messages.bag
 /ros2/
-/rosbag2-master/
+/ros1/

@@ -44,6 +44,8 @@ def group_topics(parent_graph, level, old_list_t, longest_len, name):
                 cluster_name = '/'.join(name)
                 sub_graph = Digraph(get_sub_graph_name(cluster_name),
                                     node_attr={'shape': 'rectangle'})
+                # sub_graph = Digraph(cluster_name,
+                #                     node_attr={'shape': 'rectangle'})
                 sub_graph.attr(label=cluster_name)
                 sub_graph.attr(color='grey')
                 for topic in new_list_t:

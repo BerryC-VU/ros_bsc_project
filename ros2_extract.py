@@ -38,10 +38,10 @@ def generate_topics(graph, all_topics):
     group_topic.main(graph, all_topics)
 
 
-def generate_nodes(graph, all_info):
-    nodes = all_info['node'].unique()
-    for node in nodes:
-        graph.node(node, node, {'shape': 'oval'})
+# def generate_nodes(graph, all_info):
+#     nodes = all_info['node'].unique()
+#     for node in nodes:
+#         graph.node(node, node, {'shape': 'oval'})
 
 
 def generate_edges(graph, all_topics):
@@ -54,7 +54,8 @@ def generate_edges(graph, all_topics):
 
 def create_graph(graph, topics, all_info):
     generate_topics(graph, topics)
-    generate_nodes(graph, all_info)
+
+    # generate_nodes(graph, all_info)
 
     # add fixed nodes
     graph.node('/_ros2cli_rosbag2', '/_ros2cli_rosbag2')
@@ -63,19 +64,8 @@ def create_graph(graph, topics, all_info):
 
 def main(bagfolder):
     with Reader(bagfolder) as reader:
-        topics = list(reader.topics)
-        # print(list(topics))
-        # print(type(topics))
-        # # print(dir(topics))
-        #
-        # for key in topics:
-        #     print(key, '->', topics[key].connections)
 
-        # for topic in topics:
-        #     print(topic)
-        # for topic in topics:
-        #     print("Topic is: ", topic)
-        #     print(topic.msgtype)
+        topics = list(reader.topics)
 
         # check whether '/rosout' exist since it is the only node that log information
         connections = [x for x in reader.connections if x.topic == '/rosout']
@@ -91,4 +81,4 @@ def main(bagfolder):
         create_graph(graph, topics, all_info)
 
         # view graph
-        graph.unflatten(stagger=3, fanout=True).view()
+        graph.unflatten(stagger=5, fanout=True).view()

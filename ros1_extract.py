@@ -85,7 +85,7 @@ def main(bagfile):
             b = bagreader(bagfile)
             break
         except ROSBagException as err:
-            print(err)
+            print("ERROR: ", err)
             sys.exit()
 
     if '/rosout' in b.topics:
