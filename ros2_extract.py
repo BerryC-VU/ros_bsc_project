@@ -12,32 +12,27 @@ def get_file_path(bagfolder, topic):
     return bagfolder + "/" + topic.replace("/", "-") + ".csv"
 
 
-def read_rosout(reader, connections):
-    msgs = []
-    date_times = []
-    nodes = []
-    stamps = []
-
-    df = pd.DataFrame()
-
-    for conn, timestamp, rawdata in reader.messages(list(connections)):
-        msg = deserialize_cdr(rawdata, conn.msgtype)
-        msgs.append(msg.msg)
-        date_times.append(datetime.fromtimestamp(msg.stamp.sec))
-        nodes.append(msg.name)
-        stamps.append(timestamp * (10 ** -9))
-
-    data = pd.DataFrame({'Stamps': stamps, 'Date-Time': date_times, 'Node': nodes, 'Msg': msgs})
-    df = pd.concat([df, data], ignore_index=True)
-    return df
-
-
-def get_msg_and_info(reader, connections):
+def get_msg_and_info(reader, connections, topic):
     stamps = []
     df = pd.DataFrame()
-    for conn, timestamp, rawdata in reader.messages(list(connections)):
-        stamps.append(timestamp * (10 ** -9))
-    data = pd.DataFrame({'Stamps': stamps})
+    if topic == '/rosout':
+        msgs = []
+        date_times = []
+        nodes = []
+        for conn, timestamp, rawdata in reader.messages(list(connections)):
+            msg = deserialize_cdr(rawdata, conn.msgtype)
+            msgs.append(msg.msg)
+            date_times.append(datetime.fromtimestamp(msg.stamp.sec))
+            nodes.append(msg.name)
+            stamps.append(timestamp * (10 ** -9))
+
+        data = pd.DataFrame({'Stamps': stamps, 'Date-Time': date_times, 'Node': nodes, 'Msg': msgs})
+
+    else:
+        for conn, timestamp, rawdata in reader.messages(list(connections)):
+            stamps.append(timestamp * (10 ** -9))
+        data = pd.DataFrame({'Stamps': stamps})
+
     df = pd.concat([df, data], ignore_index=True)
     return df
 
@@ -93,10 +88,7 @@ def main(bagfolder):
 
         for topic in topics:
             connections = [x for x in reader.connections if x.topic == topic]
-            if topic == '/rosout':
-                data = read_rosout(reader, connections)
-            else:
-                data = get_msg_and_info(reader, connections)
+            data = get_msg_and_info(reader, connections, topic)
 
             file_path = get_file_path(bagfolder, topic)
             if os.path.exists(file_path):
@@ -108,4 +100,3 @@ def main(bagfolder):
 
         # view graph
         graph.unflatten(stagger=5, fanout=True).view()
-
