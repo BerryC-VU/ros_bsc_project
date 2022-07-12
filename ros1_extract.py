@@ -1,12 +1,12 @@
 # python3 ros1_extract.py path/bagfile
 
-from bagpy import bagreader
+import group_topic
 import pandas as pd
 import sys
 import ast
+from bagpy import bagreader
 from graphviz import Digraph
 from rosbag import ROSBagException
-import group_topic
 
 
 def read_rosout(b, bagname):
@@ -80,7 +80,7 @@ def main(bagfile):
     # bagfile = sys.argv[1]
     bagname = bagfile.replace('.bag', '')
 
-    while(True):
+    while True:
         try:
             b = bagreader(bagfile)
             break
@@ -98,12 +98,9 @@ def main(bagfile):
         print("THERE is no '/rosout' topic")
         sys.exit()
 
-    graph = Digraph(name='ros1_'+bagname, strict=True)
-    create_graph(b.topics, all_info,graph)
+    graph = Digraph(directory=bagfile+'/', name='ros1_extraction', strict=True)
+    create_graph(b.topics, all_info, graph)
 
     # view graph
     graph.unflatten(stagger=3, fanout=True).view()
-    # graph.save(filename=)
 
-# if __name__ == "__main__":
-#     main(sys.argv[2])
