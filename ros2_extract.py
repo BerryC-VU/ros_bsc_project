@@ -1,63 +1,79 @@
-# python3 ros1_extract.py path/bagfolder
-
 from rosbags.rosbag2 import Reader
 from rosbags.serde import deserialize_cdr
 from graphviz import Digraph
 import pandas as pd
 import group_topic
 import sys
+import os
 from datetime import datetime
 
 
-def read_rosout(reader, conns):
+def get_file_path(bagfolder, topic):
+    return bagfolder + "/" + topic.replace("/", "-") + ".csv"
+
+
+def read_rosout(reader, connections):
     msgs = []
+    date_times = []
     nodes = []
-    # stamps = []
-    times = []
+    stamps = []
+
     df = pd.DataFrame()
 
-    for conn, timestamp, rawdata in reader.messages(list(conns)):
+    for conn, timestamp, rawdata in reader.messages(list(connections)):
         msg = deserialize_cdr(rawdata, conn.msgtype)
         msgs.append(msg.msg)
-        # stamps.append(msg.stamp.sec)
-        times.append(datetime.fromtimestamp(msg.stamp.sec))
+        date_times.append(datetime.fromtimestamp(msg.stamp.sec))
         nodes.append(msg.name)
-        # if "Subscribing to" in msg.msg:
-        #     print("TRUE")
-    if len(msgs) == 0:
-        print("NO message in '/rosout'")
-    else:
-        # data = pd.DataFrame({'timestamp': stamps, 'time': times, 'node': nodes, 'msg': msgs})
-        data = pd.DataFrame({'time': times, 'node': nodes, 'msg': msgs})
-        df = pd.concat([df, data])
-    # print(df)
+        stamps.append(timestamp * (10 ** -9))
+
+    data = pd.DataFrame({'Stamps': stamps, 'Date-Time': date_times, 'Node': nodes, 'Msg': msgs})
+    df = pd.concat([df, data], ignore_index=True)
     return df
 
 
-def generate_topics(graph, all_topics):
-    for topic in all_topics:
+def get_msg_and_info(reader, connections):
+    stamps = []
+    df = pd.DataFrame()
+    for conn, timestamp, rawdata in reader.messages(list(connections)):
+        stamps.append(timestamp * (10 ** -9))
+    data = pd.DataFrame({'Stamps': stamps})
+    df = pd.concat([df, data], ignore_index=True)
+    return df
+
+
+def generate_topics(bagfolder,graph, topics):
+    for topic in topics:
         if topic not in graph:
-            graph.node(topic, topic, {'shape': 'rectangle'})
-    group_topic.main(graph, all_topics)
+            tmp = pd.read_csv(get_file_path(bagfolder,topic))
+            stamps = tmp['Stamps'].tolist()
+            period = [s1 - s0 for s1, s0 in zip(stamps[1:], stamps[:-1])]
+            med_period = _median(period)
+            med_freq = round((1.0 / med_period),2)
+            graph.node(topic, topic, {'shape': 'rectangle'}, xlabel=(str(med_freq)+'Hz'))
+    group_topic.main(graph, topics)
 
 
-# def generate_nodes(graph, all_info):
-#     nodes = all_info['node'].unique()
-#     for node in nodes:
-#         graph.node(node, node, {'shape': 'oval'})
+def _median(values):
+    values_len = len(values)
+    if values_len == 0:
+        return  float('nan')
+    sorted_values = sorted(values)
+    if values_len % 2 == 1:
+        return sorted_values[int(values_len /2)]
+
+    lower = sorted_values[int(values_len /2) -1 ]
+    upper = sorted_values[int(values_len /2)]
+    return float(lower+upper)/2
 
 
-def generate_edges(graph, all_topics):
-    for topic in all_topics:
-        if topic == '/parameter_events':
-            graph.edge('/parameter_events', '/_ros2cli_rosbag2')
-
+def generate_edges(graph, topics):
+    for topic in topics:
         graph.edge('/_ros2cli_rosbag2', topic)
 
 
-def create_graph(graph, topics):
-    generate_topics(graph, topics)
-
+def create_graph(bagfolder, graph, topics):
+    generate_topics(bagfolder, graph, topics)
     # generate_nodes(graph, all_info)
 
     # add fixed nodes
@@ -71,21 +87,25 @@ def main(bagfolder):
 
         topics = list(reader.topics)
 
-        # check whether '/rosout' exist since it is the only node that log information
-        connections = [x for x in reader.connections if x.topic == '/rosout']
-
-        if len(connections) != 0:  # if there is information logged in '/rosout'
-            all_info = read_rosout(reader, connections)
-            all_info.to_csv(bagfolder + '/info.csv')
-        else:
+        if '/rosout' not in topics:
             print("THERE is no '/rosout' topic")
             sys.exit()
 
-        # graph = Digraph(name='ros2_'+bagfolder, strict=True)
+        for topic in topics:
+            connections = [x for x in reader.connections if x.topic == topic]
+            if topic == '/rosout':
+                data = read_rosout(reader, connections)
+            else:
+                data = get_msg_and_info(reader, connections)
+
+            file_path = get_file_path(bagfolder, topic)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            data.to_csv(file_path)
+
         graph = Digraph(directory=bagfolder+'/', name='ros2_extraction', strict=True)
-        create_graph(graph, topics)
+        create_graph(bagfolder, graph, topics)
 
         # view graph
-        # graph.unflatten(stagger=5, fanout=True).view()
+        graph.unflatten(stagger=5, fanout=True).view()
 
-        return [reader.start_time, reader.end_time]
