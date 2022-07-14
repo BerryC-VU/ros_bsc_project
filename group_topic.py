@@ -9,8 +9,9 @@ list_of_str = []
 def extract_subtopic(list_s, level):
     result = []
     for l in list_s:
-        if l[level] not in result:
-            result.append(l[level])
+        if len(l) > level:
+            if l[level] not in result:
+                result.append(l[level])
     return result
 
 
@@ -25,6 +26,7 @@ def group_topics(parent_graph, level, old_list_t, longest_len, name):
 
         # unique subtopics of current level
         sub_t = extract_subtopic(old_list_t, level)
+        # print("subtopics: ", sub_t)
 
         for t in sub_t:
             name.append(t)
@@ -34,7 +36,7 @@ def group_topics(parent_graph, level, old_list_t, longest_len, name):
             # longest length of subtopic among all lists in new_list_t
             longest_len = 0
             for l in old_list_t:
-                if l[level] == t:
+                if len(l) > level and l[level] == t:
                     new_list_t.append(l)
                     if len(l) > longest_len:
                         longest_len = len(l)
@@ -51,6 +53,7 @@ def group_topics(parent_graph, level, old_list_t, longest_len, name):
                 for topic in new_list_t:
                     topic_name = '/'.join(topic)
                     sub_graph.node(topic_name, label=topic_name)
+                    # sub_graph.graph_attr.update(rank='same')
                 parent_graph.subgraph(sub_graph)
 
             group_topics(sub_graph, level + 1, new_list_t, longest_len, name)
@@ -71,6 +74,7 @@ def main(graph, topics):
     # topics = ['/a/x/1', '/a/x/2', '/a/y/1', '/a/y/2', '/a/z', '/b/x/1', '/b/x/2','/c']
     # topics = ['/a/x/1/m', '/a/x/1/n', '/a/x/2', '/a/y/1', '/a/y/2', '/a/z', '/b/x/1', '/b/x/2',
     #           '/c', '/a/x/m/2', '/b/y/1', '/b/c', '/a/a', '/d/c/c/c/c/c/c/c', '/b/ccccccccccccccccccc']
+
 
     # add each topic into the graph, label with its own name
     for topic in topics:

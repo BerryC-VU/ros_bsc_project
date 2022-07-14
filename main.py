@@ -7,7 +7,7 @@ import sys
 
 def main():
     ros_ver = sys.argv[1]
-    path_to_file = 'ros2/turtlesim_test/test8'
+    path_to_file = 'ros2/TUdelft/rosbag2_2022_07_01-09_25_19'
     # path_to_file = 'ros1/back_and_forth_small.bag'
 
     if ros_ver == 'ros1':

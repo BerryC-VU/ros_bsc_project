@@ -6,6 +6,7 @@ import group_topic
 import sys
 import os
 from datetime import datetime
+import numpy as np
 
 
 def get_file_path(bagfolder, topic):
@@ -45,7 +46,10 @@ def generate_topics(bagfolder,graph, topics):
             period = [s1 - s0 for s1, s0 in zip(stamps[1:], stamps[:-1])]
             med_period = _median(period)
             med_freq = round((1.0 / med_period),2)
-            graph.node(topic, topic, {'shape': 'rectangle'}, xlabel=(str(med_freq)+'Hz'))
+            if str(med_freq) != 'nan':
+                graph.node(topic, topic, {'shape': 'rectangle'}, xlabel=(str(med_freq)+'Hz'))
+            else:
+                graph.node(topic, topic, {'shape': 'rectangle'}, xlabel=(str(med_freq)))
     group_topic.main(graph, topics)
 
 
@@ -96,6 +100,7 @@ def main(bagfolder):
             data.to_csv(file_path)
 
         graph = Digraph(directory=bagfolder+'/', name='ros2_extraction', strict=True)
+        graph.graph_attr["rankdir"] = "LR"
         create_graph(bagfolder, graph, topics)
 
         # view graph
