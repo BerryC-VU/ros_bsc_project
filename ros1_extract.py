@@ -76,14 +76,16 @@ def create_graph(topics, all_info, graph):
     graph.edge("/fixed node", "/rosout_agg")
 
 
-def main(bagfile):
-    # bagfile = sys.argv[1]
+def main(bagfile, input):
     bagname = bagfile.replace('.bag', '')
 
     while True:
         try:
             b = bagreader(bagfile)
-            break
+            if input == 'time-window':
+                return [b.start_time, b.end_time]
+            else:
+                break
         except ROSBagException as err:
             print("ERROR: ", err)
             sys.exit()
