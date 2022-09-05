@@ -20,4 +20,4 @@ An example of running the extraction on [bagfile](https://github.com/BerryC-VU/r
 python3 src/main.py rosbag2_2022_06_02-08_49_23 '2022-06-02 08:50:06' '2022-06-02 09:01:20'
 ```
 The expected result as follow:
-<img src="extracted_graph.pdf" width="700" align="center" alt="Extraction results">
+<img src="extracted_graph.png" width="500" align="center" alt="Extraction results">
