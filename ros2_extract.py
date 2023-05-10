@@ -16,6 +16,7 @@ def get_msg_and_info(reader, connections, topic):
     df = pd.DataFrame()
     for conn, timestamp, rawdata in reader.messages(list(connections)):
         stamps.append(timestamp * (10 ** -9))
+        # print(rawdata)
     data = pd.DataFrame({'Stamps': stamps})
     df = pd.concat([df, data], ignore_index=True)
 
@@ -95,10 +96,10 @@ def main(bagfolder, start_t, end_t):
 
             topic_info = get_msg_and_info(reader, connections, topic)
             file_path = get_file_path(bagfolder, topic)
-
+            print(file_path)
             if os.path.exists(file_path):
                 os.remove(file_path)
-                topic_info.to_csv(file_path)
+            topic_info.to_csv(file_path)
 
             if len(topic_info['Stamps'].head(1).values) != 0 and len(topic_info['Stamps'].tail(1).values) != 0:
                 data = pd.DataFrame({'topics': topic,
